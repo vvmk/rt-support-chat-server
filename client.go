@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	r "github.com/dancannon/gorethink"
 	"github.com/gorilla/websocket"
 )
 
@@ -11,16 +12,19 @@ type Message struct {
 	Name string      `json:"name"`
 	Data interface{} `json:"data"`
 }
+
 type Client struct {
 	send        chan Message
 	socket      *websocket.Conn
 	findHandler FindHandler
+	session     *r.Session
 }
 
 func (client *Client) Read() {
 	var message Message
 	for {
 		if err := client.socket.ReadJSON(message); err != nil {
+			fmt.Println("Error: ", err)
 			break
 		}
 		// router should expose a function that can look up a handler
@@ -31,20 +35,24 @@ func (client *Client) Read() {
 	}
 	client.socket.Close()
 }
+
 func (client *Client) Write() {
 	for msg := range client.send {
 		fmt.Printf("%#v\n", msg)
 		if err := client.socket.WriteJSON(msg); err != nil {
+			fmt.Println("Error: ", err)
 			break
 		}
 	}
 	client.socket.Close()
 }
 
-func NewClient(socket *websocket.Conn, findHandler FindHandler) *Client {
+func NewClient(socket *websocket.Conn, findHandler FindHandler,
+	session *r.Session) *Client {
 	return &Client{
 		send:        make(chan Message),
 		socket:      socket,
-		findHandler: findHandler, //need an ending comma, oh boy
+		findHandler: findHandler,
+		session:     session, //need an ending comma, oh boy
 	}
 }
