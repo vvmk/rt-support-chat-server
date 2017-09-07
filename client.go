@@ -20,16 +20,18 @@ type Client struct {
 	session     *r.Session
 }
 
+/* handle messages sent to client */
 func (client *Client) Read() {
 	var message Message
 	for {
-		if err := client.socket.ReadJSON(message); err != nil {
-			fmt.Println("Error: ", err)
+		if err := client.socket.ReadJSON(&message); err != nil {
+			fmt.Println("Error messagse sent to client.Read(): ", err)
 			break
 		}
 		// router should expose a function that can look up a handler
-		//then call that function here.
+		// then call that function here.
 		if handler, found := client.findHandler(message.Name); found {
+			fmt.Println("handler found for message: ", message.Name)
 			handler(client, message.Data)
 		}
 	}
@@ -40,7 +42,7 @@ func (client *Client) Write() {
 	for msg := range client.send {
 		fmt.Printf("%#v\n", msg)
 		if err := client.socket.WriteJSON(msg); err != nil {
-			fmt.Println("Error: ", err)
+			fmt.Println("client.Write() Error: ", err)
 			break
 		}
 	}
