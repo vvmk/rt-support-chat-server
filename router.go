@@ -52,7 +52,7 @@ func (e *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	client := NewClient(socket, e.FindHandler, e.session)
-	//TODO: may have to pipe messages from Write() back to main routine so debug them...
+	defer client.Close() //covers our ass if something goes awry
 	go client.Write()
 	client.Read()
 }

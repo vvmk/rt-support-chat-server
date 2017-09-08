@@ -5,9 +5,21 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+const (
+	ChannelStop = iota //sweet
+	UserStop
+	MessageStop
+)
+
 /* Handler signature :
  * type Handler func(*Client, interface{})
  */
+
+/* from dancannon/gorethink/readme
+
+   +Run - returns a cursor which can be used to view all rows returned.
+   +RunWrite - returns a WriteResponse and should be used for queries such as Insert, Update, etc...
+   +Exec - sends a query to the server and closes the connection immediately after reading the response from the database. If you do not wish to wait for the response then you can set the NoReply flag.*/
 
 func addChannel(client *Client, data interface{}) {
 	var channel Channel //load the data into this
@@ -25,6 +37,40 @@ func addChannel(client *Client, data interface{}) {
 			Exec(client.session)
 		if insertErr != nil {
 			client.send <- Message{"error", err.Error()}
+		}
+	}()
+}
+
+func subscribeChannel(client *Client, data interface{}) {
+	stop := client.NewStopChannel(ChannelStop)
+	result := make(chan r.ChangeResponse)
+
+	cursor, err := r.Table("channel").
+		Changes(r.ChangesOpts{IncludeInitial: true}).
+		Run(client.session)
+	if err != nil {
+		client.send <- Message{"error", err.Error()}
+		return
+	}
+
+	go func() {
+		var change r.ChangeResponse
+		for cursor.Next(&change) {
+			result <- change //send change to the result gochannel
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case <-stop:
+				cursor.Close()
+				return
+			case change := <-result:
+				if change.NewValue != nil && change.OldValue == nil {
+					client.send <- Message{"channel add", change.NewValue}
+				}
+			}
 		}
 	}()
 }
