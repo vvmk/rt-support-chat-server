@@ -41,6 +41,9 @@ func addChannel(client *Client, data interface{}) {
 	}()
 }
 
+/* subscribeChannel()
+ *
+ */
 func subscribeChannel(client *Client, data interface{}) {
 	stop := client.NewStopChannel(ChannelStop)
 	result := make(chan r.ChangeResponse)
@@ -73,4 +76,8 @@ func subscribeChannel(client *Client, data interface{}) {
 			}
 		}
 	}()
+}
+
+func unsubscribeChannel(client *Client, data interface{}) {
+	client.StopForKey(ChannelStop)
 }
