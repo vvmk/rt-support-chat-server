@@ -4,6 +4,7 @@ import (
 	r "github.com/dancannon/gorethink"
 	"log"
 	"net/http"
+	"time"
 )
 
 type Channel struct {
@@ -12,8 +13,16 @@ type Channel struct {
 }
 
 type User struct {
-	Id   string `gorethink:"id,omitempty"`
-	Name string `gorethink:"name"`
+	Id   string `json:"id" gorethink:"id,omitempty"`
+	Name string `json:"name" gorethink:"name"`
+}
+
+type ChatMessage struct {
+	Id        string    `json:"id" gorethink:"id,omitempty"`
+	Author    string    `json:"author" gorethink:"author"`
+	Body      string    `json:"body" gorethink:"body"`
+	ChannelId string    `json:"channelId" gorethink:"channelId"`
+	CreatedAt time.Time `json:"createdAt" gorethink:"createdAt,omitempty"`
 }
 
 func main() {
@@ -30,6 +39,14 @@ func main() {
 	router.Handle("channel add", addChannel)
 	router.Handle("channel subscribe", subscribeChannel)
 	router.Handle("channel unsubscribe", unsubscribeChannel)
+
+	// router.Handle("user edit", editUser)
+	// router.Handle("user subscribe", subscribeUser)
+	router.Handle("user unsubscribe", unsubscribeUser)
+
+	router.Handle("message add", addMessage)
+	// router.Handle("message subscribe", subscribeMessage)
+	router.Handle("messagse unsubscribe", unsubscribeMessage)
 
 	http.Handle("/", router)
 	http.ListenAndServe(":4000", nil)

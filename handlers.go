@@ -81,3 +81,29 @@ func subscribeChannel(client *Client, data interface{}) {
 func unsubscribeChannel(client *Client, data interface{}) {
 	client.StopForKey(ChannelStop)
 }
+
+func unsubscribeUser(client *Client, data interface{}) {
+	client.StopForKey(UserStop)
+}
+
+func addMessage(client *Client, data interface{}) {
+	var chatMessage ChatMessage
+	err := mapstructure.Decode(data, &chatMessage)
+	if err != nil {
+		client.send <- Message{"error", err.Error()}
+		return
+	}
+
+	go func() {
+		insertErr := r.Table("message").
+			Insert(chatMessage).
+			Exec(client.session)
+		if insertErr != nil {
+			client.send <- Message{"error", insertErr.Error()}
+		}
+	}()
+}
+
+func unsubscribeMessage(client *Client, data interface{}) {
+	client.StopForKey(MessageStop)
+}
