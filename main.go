@@ -45,7 +45,7 @@ func main() {
 	router.Handle("user unsubscribe", unsubscribeUser)
 
 	router.Handle("message add", addMessage)
-	// router.Handle("message subscribe", subscribeMessage)
+	router.Handle("message subscribe", subscribeMessage)
 	router.Handle("messagse unsubscribe", unsubscribeMessage)
 
 	http.Handle("/", router)
