@@ -3,6 +3,7 @@ package main
 import (
 	r "github.com/dancannon/gorethink"
 	"github.com/mitchellh/mapstructure"
+	"time"
 )
 
 const (
@@ -29,8 +30,6 @@ func addChannel(client *Client, data interface{}) {
 		return
 	}
 
-	// this is a slow, blocking function, dispatch that shit to a goroutine
-	// don't afraid, they're very light!
 	go func() {
 		insertErr := r.Table("channel").
 			Insert(channel).
@@ -93,6 +92,8 @@ func addMessage(client *Client, data interface{}) {
 		client.send <- Message{"error", err.Error()}
 		return
 	}
+
+	chatMessage.CreatedAt = time.Now()
 
 	go func() {
 		insertErr := r.Table("message").

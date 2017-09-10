@@ -22,7 +22,7 @@ type ChatMessage struct {
 	Author    string    `json:"author" gorethink:"author"`
 	Body      string    `json:"body" gorethink:"body"`
 	ChannelId string    `json:"channelId" gorethink:"channelId"`
-	CreatedAt time.Time `json:"createdAt" gorethink:"createdAt,omitempty"`
+	CreatedAt time.Time `json:"createdAt" gorethink:"createdAt"`
 }
 
 func main() {
