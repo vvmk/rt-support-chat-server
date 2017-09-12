@@ -81,6 +81,7 @@ func unsubscribeChannel(client *Client, data interface{}) {
 	client.StopForKey(ChannelStop)
 }
 
+// reminder to self: focus, dude.
 /*func editUser(client *Client, data interface{}) {
 	var user User
 	err := mapstructure.Decode(data, &user)
@@ -121,7 +122,20 @@ func subscribeMessage(client *Client, data interface{}) {
 	stop := client.NewStopChannel(MessageStop)
 	result := make(chan r.ChangeResponse)
 
-	cursor, err := r.Table("message").OrderBy(r.OrderByOpts{Index: "createdAt"}).
+	var activeChannel ActiveChannel
+	mapStructErr := mapstructure.Decode(data, &activeChannel)
+	if mapStructErr != nil {
+		client.send <- Message{"error", mapStructErr.Error()}
+		return
+	}
+
+	// TODO: these need to be ordered by "createdAt". Rethink
+	//initially appears not to have a straightforward way to do this.
+	// try again later...
+	cursor, err := r.Table("message").
+		GetAllByIndex("channelId", activeChannel.ChannelId).
+		//Between(activeChannel.ChannelId, activeChannel.ChannelId, r.BetweenOpts{Index: "compound", RightBound: "open", LeftBound: "open"}).
+		//OrderBy(r.OrderByOpts{Index: "compound"}).
 		Changes(r.ChangesOpts{IncludeInitial: true}).
 		Run(client.session)
 	if err != nil {

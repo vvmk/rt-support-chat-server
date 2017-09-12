@@ -25,6 +25,10 @@ type ChatMessage struct {
 	CreatedAt time.Time `json:"createdAt" gorethink:"createdAt"`
 }
 
+type ActiveChannel struct {
+	ChannelId string `json:"channelId" gorethink:"channelId"`
+}
+
 func main() {
 	session, err := r.Connect(r.ConnectOpts{
 		Address:  "localhost:28015",
