@@ -12,16 +12,6 @@ const (
 	MessageStop
 )
 
-/* Handler signature :
- * type Handler func(*Client, interface{})
- */
-
-/* from dancannon/gorethink/readme
-
-   +Run - returns a cursor which can be used to view all rows returned.
-   +RunWrite - returns a WriteResponse and should be used for queries such as Insert, Update, etc...
-   +Exec - sends a query to the server and closes the connection immediately after reading the response from the database. If you do not wish to wait for the response then you can set the NoReply flag.*/
-
 func addChannel(client *Client, data interface{}) {
 	var channel Channel //load the data into this
 	err := mapstructure.Decode(data, &channel)
@@ -81,21 +71,66 @@ func unsubscribeChannel(client *Client, data interface{}) {
 	client.StopForKey(ChannelStop)
 }
 
-// reminder to self: focus, dude.
-/*func editUser(client *Client, data interface{}) {
+func editUser(client *Client, data interface{}) {
 	var user User
 	err := mapstructure.Decode(data, &user)
 	if err != nil {
 		client.send <- Message{"error", err.Error()}
 		return
 	}
+
 	go func() {
-		insertErr := r.Table("user").
-		}()
-}*/
+		response, insertErr := r.Table("user").
+			Insert(user, r.InsertOpts{Conflict: "replace"}).
+			RunWrite(client.session)
+		if insertErr != nil {
+			client.send <- Message{"error", insertErr.Error()}
+			return
+		}
+	}()
+}
+
+func subscribeUser(client *Client, data interface{}) {
+	stop := client.NewStopChannel(UserStop)
+	result := make(chan r.ChangeResponse)
+
+	cursor, err := r.Table("user").
+		Changes(r.ChangesOpts{IncludeInitial: true}).
+		Run(client.session)
+	if err != nil {
+		client.send <- Message{"error", err.Error()}
+		return
+	}
+
+	go func() {
+		var change r.ChangeResponse
+		for cursor.Next(&change) {
+			result <- change //send change to the result gochannel
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case <-stop:
+				cursor.Close()
+				return
+			case change := <-result:
+				if change.NewValue != nil && change.OldValue == nil {
+					client.send <- Message{"user add", change.NewValue}
+				} else if change.NewValue != nil && change.OldValue != nil {
+					client.send <- Message{"user edit", change.NewValue}
+				} else if change.NewValue == nil && change.OldValue != nil {
+					client.send <- Message{"user remove", change.OldValue}
+				}
+			}
+		}
+	}()
+}
 
 func unsubscribeUser(client *Client, data interface{}) {
 	client.StopForKey(UserStop)
+	// TODO: remove client activeUser from database
 }
 
 func addMessage(client *Client, data interface{}) {
