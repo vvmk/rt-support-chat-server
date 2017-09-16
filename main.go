@@ -25,10 +25,6 @@ type ChatMessage struct {
 	CreatedAt time.Time `json:"createdAt" gorethink:"createdAt"`
 }
 
-type ActiveChannel struct {
-	ChannelId string `json:"channelId" gorethink:"channelId"`
-}
-
 func main() {
 	session, err := r.Connect(r.ConnectOpts{
 		Address:  "localhost:28015",
@@ -48,9 +44,9 @@ func main() {
 	router.Handle("user subscribe", subscribeUser)
 	router.Handle("user unsubscribe", unsubscribeUser)
 
-	router.Handle("message add", addMessage)
-	router.Handle("message subscribe", subscribeMessage)
-	router.Handle("messagse unsubscribe", unsubscribeMessage)
+	router.Handle("message add", addChatMessage)
+	router.Handle("message subscribe", subscribeChatMessage)
+	router.Handle("messagse unsubscribe", unsubscribeChatMessage)
 
 	http.Handle("/", router)
 	http.ListenAndServe(":4000", nil)
