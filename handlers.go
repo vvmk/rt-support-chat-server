@@ -131,7 +131,7 @@ func subscribeChatMessage(client *Client, data interface{}) {
 		// TODO: this will work but its not using indexes, needs to be 
 		// 			optimized if used outside of demo context
 		cursor, err := r.Table("message").
-			OrderBy(r.OrderByOpts{Index: r.Desc("createdAt")}).
+			OrderBy(r.OrderByOpts{Index: r.Asc("createdAt")}).
 			Filter(r.Row.Field("channelId").Eq(channelId)).
 			Changes(r.ChangesOpts{IncludeInitial: true}).
 			Run(client.session)

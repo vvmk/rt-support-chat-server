@@ -29,8 +29,8 @@ type Client struct {
  * can listen for stop signals (through the stop chan
  */
 func (c *Client) NewStopChannel(stopKey int) chan bool {
-	c.StopForKey(stopKey) // prevent possible leak
-	
+	c.StopForKey(stopKey) // prevent possible goroutine leak
+
 	stop := make(chan bool)
 	c.stopChannels[stopKey] = stop
 	return stop

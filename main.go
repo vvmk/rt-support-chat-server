@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"sync"
 )
 
 type Channel struct {
@@ -34,14 +35,24 @@ func main() {
 		log.Panic(err.Error())
 	}
 
+	var mutex = &sync.Mutex{}
+
 	router := NewRouter(session)
 
 	router.Handle("channel add", addChannel)
+
+	mutex.Lock()
 	router.Handle("channel subscribe", subscribeChannel)
+	mutex.Unlock()
+
 	router.Handle("channel unsubscribe", unsubscribeChannel)
 
 	router.Handle("user edit", editUser)
+
+	mutex.Lock()
 	router.Handle("user subscribe", subscribeUser)
+	mutex.Unlock()
+
 	router.Handle("user unsubscribe", unsubscribeUser)
 
 	router.Handle("message add", addChatMessage)
