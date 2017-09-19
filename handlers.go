@@ -30,6 +30,42 @@ func addChannel(client *Client, data interface{}) {
 	}()
 }
 
+func editChannel(client *Client, data interface{}) {
+	var channel Channel
+	err := mapstructure.Decode(data, &channel)
+	if err != nil {
+		client.send <- Message{"error", err.Error()}
+		return
+	}
+	go func() {
+		_, updateErr := r.Table("channel").
+			Get(channel.Id).
+			Update(channel).
+			RunWrite(client.session)
+		if updateErr != nil {
+			client.send <- Message{"error", updateErr.Error()}
+			return
+		}
+	}()
+}
+
+func deleteChannel(client *Client, data interface{}) {
+	var channel Channel
+	err := mapstructure.Decode(data, &channel)
+	if err != nil {
+		client.send <- Message{"error", err.Error()}
+		return
+	}
+	go func() {
+		deleteErr := r.Table("channel").
+			Get(channel.Id).
+			Exec(client.session)
+		if deleteErr != nil {
+			client.send <- Message{"error", deleteErr.Error()}
+			return
+		}
+	}()
+}
 /* subscribeChannel()
  *
  */

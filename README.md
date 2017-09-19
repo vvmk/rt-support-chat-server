@@ -9,4 +9,4 @@ I wrote this alongside a course by [James Moore](https://github.com/knowthen)
 + authentication
 
 ### issues
-+ data race on subscribeChannel and subscribeUser
++ possible data race on subscribeChannel and subscribeUser. I think this is handled but the error still appears when running with race flag

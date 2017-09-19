@@ -40,7 +40,9 @@ func main() {
 	router := NewRouter(session)
 
 	router.Handle("channel add", addChannel)
-
+	router.Handle("channel edit", editChannel)
+	router.Handle("channel delete", deleteChannel)
+	
 	mutex.Lock()
 	router.Handle("channel subscribe", subscribeChannel)
 	mutex.Unlock()
