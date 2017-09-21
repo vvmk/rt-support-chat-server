@@ -4,6 +4,7 @@ import (
 	r "github.com/dancannon/gorethink"
 	"github.com/mitchellh/mapstructure"
 	"time"
+	"fmt"
 )
 
 const (
@@ -37,6 +38,7 @@ func editChannel(client *Client, data interface{}) {
 		client.send <- Message{"error", err.Error()}
 		return
 	}
+	//fmt.Println("editChannel: ", channel.Id)
 	go func() {
 		_, updateErr := r.Table("channel").
 			Get(channel.Id).
@@ -59,6 +61,7 @@ func deleteChannel(client *Client, data interface{}) {
 	go func() {
 		deleteErr := r.Table("channel").
 			Get(channel.Id).
+			Delete().
 			Exec(client.session)
 		if deleteErr != nil {
 			client.send <- Message{"error", deleteErr.Error()}
